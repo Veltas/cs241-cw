@@ -42,26 +42,27 @@ void sniff(char *interface, int verbose) {
 
 // Utility/Debugging method for dumping raw packet data
 void dump(const unsigned char *data, int length) {
+  size_t i;
   static size_t pcount = 0;
   // Decode Packet Header
   struct ether_header *eth_header = (struct ether_header *) data;
-  printf("\n\n === PACKET %ld HEADER ===", pcount);
+  printf("\n\n === PACKET %zu HEADER ===", pcount);
   printf("\nSource MAC: ");
-  for (size_t i = 0; i < 6; ++i) {
+  for (i = 0; i < 6; ++i) {
     printf("%02x", eth_header->ether_shost[i]);
     if (i < 5) {
       printf(":");
     }
   }
   printf("\nDestination MAC: ");
-  for (size_t i = 0; i < 6; ++i) {
+  for (i = 0; i < 6; ++i) {
     printf("%02x", eth_header->ether_dhost[i]);
     if (i < 5) {
       printf(":");
     }
   }
   printf("\nType: %hu\n", eth_header->ether_type);
-  printf(" === PACKET %ld DATA == \n", pcount);
+  printf(" === PACKET %zu DATA == \n", pcount);
   // Decode Packet Data (Skipping over the header)
   long data_bytes = (long)length - (long)ETH_HLEN;
   const unsigned char *payload = data + ETH_HLEN;
@@ -69,7 +70,7 @@ void dump(const unsigned char *data, int length) {
   while (data_bytes > 0) {
     size_t output_bytes = (size_t)data_bytes < output_sz ? (size_t)data_bytes : output_sz;
     // Print data in raw hexadecimal form
-    for (size_t i = 0; i < output_sz; ++i) {
+    for (i = 0; i < output_sz; ++i) {
       if (i < output_bytes) {
         printf("%02x ", payload[i]);
       } else {
@@ -78,7 +79,7 @@ void dump(const unsigned char *data, int length) {
     }
     printf ("| ");
     // Print data in ascii form
-    for (size_t i = 0; i < output_bytes; ++i) {
+    for (i = 0; i < output_bytes; ++i) {
       char byte = payload[i];
       if (byte > 31 && byte < 127) {
         // Byte is in printable ascii range

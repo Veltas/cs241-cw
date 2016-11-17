@@ -2,7 +2,7 @@ BINARY = idsniff
 OBJS   = $(patsubst %.c,%.o,$(wildcard *.c))
 
 CC     = gcc
-CFLAGS = -g -DDEBUG -Wall -W -pedantic
+CFLAGS = -g -DDEBUG -Wall -W
 LDLIBS = -lpcap -lpthread
 
 .PHONY: all
