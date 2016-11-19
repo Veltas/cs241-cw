@@ -44,7 +44,7 @@ void dump(const unsigned char *const data, const int length) {
   size_t i;
   static size_t pcount = 0;
   // Decode Packet Header
-  struct ether_header *const eth_header = data;
+  struct ether_header *const eth_header = (void *)data;
   printf("\n\n === PACKET %zu HEADER ===", pcount);
   printf("\nSource MAC: ");
   for (i = 0; i < 6; ++i) {
