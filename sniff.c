@@ -8,10 +8,10 @@
 #include "dispatch.h"
 
 // Application main sniffing loop
-void sniff(char *interface, int verbose) {
+void sniff(const char *const interface, const int verbose) {
   // Open network interface for packet capture
   char errbuf[PCAP_ERRBUF_SIZE];
-  pcap_t *pcap_handle = pcap_open_live(interface, 4096, 1, 0, errbuf);
+  pcap_t *const pcap_handle = pcap_open_live(interface, 4096, 1, 0, errbuf);
   if (pcap_handle == NULL) {
     fprintf(stderr, "Unable to open interface %s\n", errbuf);
     exit(EXIT_FAILURE);
@@ -19,11 +19,10 @@ void sniff(char *interface, int verbose) {
     printf("SUCCESS! Opened %s for capture\n", interface);
   }
   // Capture packets (very ugly code)
-  struct pcap_pkthdr header;
-  const unsigned char *packet;
   while (1) {
-    // Capture a  packet
-    packet = pcap_next(pcap_handle, &header);
+    // Capture a packet
+    struct pcap_pkthdr header;
+    const unsigned char *const packet = pcap_next(pcap_handle, &header);
     if (packet == NULL) {
       // pcap_next can return null if no packet is seen within a timeout
       if (verbose) {
@@ -41,11 +40,11 @@ void sniff(char *interface, int verbose) {
 }
 
 // Utility/Debugging method for dumping raw packet data
-void dump(const unsigned char *data, int length) {
+void dump(const unsigned char *const data, const int length) {
   size_t i;
   static size_t pcount = 0;
   // Decode Packet Header
-  struct ether_header *eth_header = (struct ether_header *) data;
+  struct ether_header *const eth_header = (struct ether_header *) data;
   printf("\n\n === PACKET %zu HEADER ===", pcount);
   printf("\nSource MAC: ");
   for (i = 0; i < 6; ++i) {
@@ -68,7 +67,8 @@ void dump(const unsigned char *data, int length) {
   const unsigned char *payload = data + ETH_HLEN;
   static const size_t output_sz = 20; // Output this many bytes at a time
   while (data_bytes > 0) {
-    size_t output_bytes = (size_t)data_bytes < output_sz ? (size_t)data_bytes : output_sz;
+    const size_t output_bytes =
+      (size_t)data_bytes < output_sz ? (size_t)data_bytes : output_sz;
     // Print data in raw hexadecimal form
     for (i = 0; i < output_sz; ++i) {
       if (i < output_bytes) {
@@ -80,7 +80,7 @@ void dump(const unsigned char *data, int length) {
     printf ("| ");
     // Print data in ascii form
     for (i = 0; i < output_bytes; ++i) {
-      char byte = payload[i];
+      const char byte = payload[i];
       if (byte > 31 && byte < 127) {
         // Byte is in printable ascii range
         printf("%c", byte);
