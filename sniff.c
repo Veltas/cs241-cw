@@ -61,7 +61,7 @@ void dump(const unsigned char *const data, const int length) {
     }
   }
   printf("\nType: %hu\n", eth_header->ether_type);
-  printf(" === PACKET %zu DATA == \n", pcount);
+  printf(" === PACKET %zu DATA ==\n", pcount);
   // Decode Packet Data (Skipping over the header)
   long data_bytes = (long)length - (long)ETH_HLEN;
   const unsigned char *payload = data + ETH_HLEN;
