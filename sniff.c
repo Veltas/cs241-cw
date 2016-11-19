@@ -15,10 +15,10 @@ static void dump_mac_address(const u_char *const addr)
   for (i = 0; i < 6; ++i) {
     printf("%02x", addr[i]);
     if (i < 5) {
-      putchar(':');
+      printf(":");
     }
   }
-  putchar('\n');
+  printf("\n");
 }
 
 static void dump_hex(const unsigned char *payload, size_t data_bytes)
