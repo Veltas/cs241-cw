@@ -32,10 +32,10 @@ static void dump_hex(const unsigned char *payload, size_t data_bytes)
       if (i < output_bytes) {
         printf("%02x ", payload[i]);
       } else {
-        printf ("   "); // Maintain padding for partial lines
+        printf("   "); // Maintain padding for partial lines
       }
     }
-    printf ("| ");
+    printf("| ");
     // Print data in ascii form
     for (i = 0; i < output_bytes; ++i) {
       const char byte = payload[i];
