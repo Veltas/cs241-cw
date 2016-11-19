@@ -2,6 +2,5 @@
 #define CS241_SNIFF_H
 
 void sniff(const char *interface, int verbose);
-void dump(const unsigned char *data, int length);
 
 #endif
