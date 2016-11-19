@@ -75,9 +75,8 @@ void sniff(const char *const interface, const int verbose) {
   if (pcap_handle == NULL) {
     fprintf(stderr, "Unable to open interface %s\n", errbuf);
     exit(EXIT_FAILURE);
-  } else {
-    printf("SUCCESS! Opened %s for capture\n", interface);
   }
+  printf("SUCCESS! Opened %s for capture\n", interface);
   // Capture packets (very ugly code)
   while (1) {
     // Capture a packet
