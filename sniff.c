@@ -69,8 +69,23 @@ static void dump(const unsigned char *const data, const size_t length) {
   pcount++;
 }
 
+// Callback which handles capturing a packet, called by pcap_loop in sniff
+void sniff_callback(
+  u_char *const                   user_data,
+  const struct pcap_pkthdr *const header,
+  const u_char *const             packet
+) {
+  const int verbose = *(int *)user_data;
+  // Optional: dump raw data to terminal
+  if (verbose) {
+    dump(packet, header->len);
+  }
+  // Dispatch packet for processing
+  dispatch(header, packet, verbose);
+}
+
 // Application main sniffing loop
-void sniff(const char *const interface, const int verbose) {
+void sniff(const char *const interface, int verbose) {
   // Open network interface for packet capture
   char errbuf[PCAP_ERRBUF_SIZE];
   pcap_t *const pcap_handle = pcap_open_live(interface, 4096, 1, 0, errbuf);
@@ -79,23 +94,15 @@ void sniff(const char *const interface, const int verbose) {
     exit(EXIT_FAILURE);
   }
   printf("SUCCESS! Opened %s for capture\n\n\n", interface);
-  // Capture packets (very ugly code)
+  // Capture packets using sniff_callback
   while (1) {
-    // Capture a packet
-    struct pcap_pkthdr header;
-    const unsigned char *const packet = pcap_next(pcap_handle, &header);
-    if (packet == NULL) {
-      // pcap_next can return null if no packet is seen within a timeout
-      if (verbose) {
-        printf("No packet received. %s\n", pcap_geterr(pcap_handle));
-      }
-    } else {
-      // Optional: dump raw data to terminal
-      if (verbose) {
-        dump(packet, header.len);
-      }
-      // Dispatch packet for processing
-      dispatch(&header, packet, verbose);
+    switch (pcap_loop(pcap_handle, -1, sniff_callback, (void *)&verbose)) {
+    case -1:
+      printf("No packet received. %s\n", pcap_geterr(pcap_handle));
+      break;
+    default:
+      printf("Unexpected error.\n");
+      return;
     }
   }
 }
