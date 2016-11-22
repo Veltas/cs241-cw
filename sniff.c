@@ -9,8 +9,7 @@
 
 #include "dispatch.h"
 
-static void dump_mac_address(const u_char *const addr)
-{
+static void dump_mac_address(const u_char *const addr) {
   size_t i;
   for (i = 0; i < 6; ++i) {
     printf("%02x", addr[i]);
@@ -21,8 +20,7 @@ static void dump_mac_address(const u_char *const addr)
   printf("\n");
 }
 
-static void dump_hex(const unsigned char *payload, size_t data_bytes)
-{
+static void dump_hex(const unsigned char *payload, size_t data_bytes) {
   static const size_t output_sz = 20; // Output this many bytes at a time
   size_t i;
   while (data_bytes > 0) {
