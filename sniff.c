@@ -56,10 +56,10 @@ static void dump(const unsigned char *const data, const size_t length) {
   static size_t pcount = 0;
   // Decode Packet Header
   const struct ether_header *const eth_header = (const void *)data;
-  printf(" === PACKET %zu HEADER ===", pcount);
-  printf("\nSource MAC: ");
+  printf(" === PACKET %zu HEADER ===\n", pcount);
+  printf("Source MAC: ");
   dump_mac_address(eth_header->ether_shost);
-  printf("\nDestination MAC: ");
+  printf("\nDestination MAC: \n");
   dump_mac_address(eth_header->ether_dhost);
   printf("\nType: %hu\n", eth_header->ether_type);
   printf(" === PACKET %zu DATA ==\n", pcount);
