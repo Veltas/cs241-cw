@@ -1,2 +1,3 @@
-build
+idsniff
 .*.swp
+*.o
