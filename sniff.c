@@ -57,9 +57,9 @@ static void dump(const unsigned char *const data, const size_t length) {
   printf(" === PACKET %zu HEADER ===\n", pcount);
   printf("Source MAC: ");
   dump_mac_address(eth_header->ether_shost);
-  printf("\nDestination MAC: \n");
+  printf("\nDestination MAC: ");
   dump_mac_address(eth_header->ether_dhost);
-  printf("\nType: %hu\n", eth_header->ether_type);
+  printf("\nType: %hu\n\n", eth_header->ether_type);
   printf(" === PACKET %zu DATA ==\n", pcount);
   // Decode Packet Data (Skipping over the header)
   if (length > ETH_HLEN) {
@@ -70,7 +70,7 @@ static void dump(const unsigned char *const data, const size_t length) {
 }
 
 // Callback which handles capturing a packet, called by pcap_loop in sniff
-void sniff_callback(
+static void sniff_callback(
   u_char *const                   user_data,
   const struct pcap_pkthdr *const header,
   const u_char *const             packet
