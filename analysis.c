@@ -82,6 +82,44 @@ static int interpret_eth(
   return 0;
 }
 
+// Prints relevant information from IPv4 header
+static void dump_ip(const struct IP_header *const ip_hdr) {
+  printf("=== DUMPING IPv4 HEADER INFO ===\n");
+  printf("\tVersion: %d\n", ip_hdr->v_hl >> 4);
+  printf(
+    "\tHeader length: 0x%.2X\n",
+    (unsigned)(ip_hdr->v_hl & 0xF) * IHL_MULTIPLIER
+  );
+  printf(
+    "\tID: %d\n\tDF:%c\tMF:%c\n",
+    ip_hdr->id,
+    ip_hdr->df_mf_offset & 0x80 ? 'T' : 'F',
+    ip_hdr->df_mf_offset & 0x40 ? 'T' : 'F'
+  );
+  printf("\tOffset: %d\n", 8 * (ip_hdr->df_mf_offset & 0x3F));
+  printf(
+    "\tTTL: %d\n\tProtocol: 0x%.2X\n\tChecksum: 0x%.4X\n",
+    ip_hdr->ttl,
+    (unsigned)ip_hdr->protocol,
+    (unsigned)ip_hdr->checksum
+  );
+  printf(
+    "\tSource IP address: %d.%d.%d.%d\n",
+    ip_hdr->src_ip[0],
+    ip_hdr->src_ip[1],
+    ip_hdr->src_ip[2],
+    ip_hdr->src_ip[3]
+  );
+  printf(
+    "\tDestination IP address: %d.%d.%d.%d\n",
+    ip_hdr->dest_ip[0],
+    ip_hdr->dest_ip[1],
+    ip_hdr->dest_ip[2],
+    ip_hdr->dest_ip[3]
+  );
+  printf("\n\n");
+}
+
 // Loads IPv4 header information, returns true on error
 static int interpret_ip(
   const struct Eth_header *const  eth_hdr,
@@ -97,7 +135,7 @@ static int interpret_ip(
     return 1;
   }
   if (header->len < ip_hdr_d + IHL_MIN) {
-    printf("analysis: Packet too small for IPv4 header\n");
+    if (verbose) printf("analysis: Packet too small for IPv4 header\n");
     return 1;
   }
 
@@ -121,9 +159,53 @@ static int interpret_ip(
     return 1;
   }
 
+  // Optionally print relevant information from IP header
+  if (verbose) {
+    dump_ip(ip_hdr);
+  }
+
   return 0;
 }
 
+// Print relevent information about a TCP header
+static void dump_tcp(const struct TCP_header *const tcp_hdr) {
+  printf("=== DUMPING TCP HEADER INFO ===\n");
+  printf(
+    "\tSource port: %d\n\tDestination port: %d\n",
+    tcp_hdr->src_port,
+    tcp_hdr->dest_port
+  );
+  printf(
+    "\tSequence number: %u\n\tACK number: %u\n",
+    tcp_hdr->number,
+    tcp_hdr->ack_number
+  );
+  printf(
+    "\tData offset: 0x%.2X\n\tNS:%c\n",
+    (unsigned)(tcp_hdr->offset_nsbit >> 4) * 4,
+    tcp_hdr->offset_nsbit & 0x1 ? 'T' : 'F'
+  );
+  printf(
+    "\tCWR:%c\tECE:%c\tURG:%c\tACK:%c\tPSH:%c\tRST:%c\tSYN:%c\tFIN:%c\n",
+    tcp_hdr->flags & TCP_CWR ? 'T' : 'F',
+    tcp_hdr->flags & TCP_ECE ? 'T' : 'F',
+    tcp_hdr->flags & TCP_URG ? 'T' : 'F',
+    tcp_hdr->flags & TCP_ACK ? 'T' : 'F',
+    tcp_hdr->flags & TCP_PSH ? 'T' : 'F',
+    tcp_hdr->flags & TCP_RST ? 'T' : 'F',
+    tcp_hdr->flags & TCP_SYN ? 'T' : 'F',
+    tcp_hdr->flags & TCP_FIN ? 'T' : 'F'
+  );
+  printf(
+    "\tWindow size: %d\n\tChecksum: 0x%.4x\n\tUrgent pointer: 0x%.4x\n",
+    tcp_hdr->window_size,
+    (unsigned)tcp_hdr->checksum,
+    (unsigned)tcp_hdr->urgent_ptr
+  );
+  printf("\n\n");
+}
+
+// Loads TCP header information, returns true on error
 static int interpret_tcp(
   const struct IP_header *const   ip_hdr,
   struct TCP_header *const        tcp_hdr,
@@ -147,12 +229,17 @@ static int interpret_tcp(
 
   // Correct endianness
   tcp_hdr->src_port    = ntohs(tcp_hdr->src_port);
-  tcp_hdr->dest_port   = ntohs(tcp_hdr->src_port);
+  tcp_hdr->dest_port   = ntohs(tcp_hdr->dest_port);
   tcp_hdr->number      = ntohl(tcp_hdr->number);
   tcp_hdr->ack_number  = ntohl(tcp_hdr->ack_number);
   tcp_hdr->window_size = ntohs(tcp_hdr->window_size);
   tcp_hdr->checksum    = ntohs(tcp_hdr->checksum);
   tcp_hdr->urgent_ptr  = ntohs(tcp_hdr->urgent_ptr);
+
+  // Optionally print relevant information from TCP header
+  if (verbose) {
+    dump_tcp(tcp_hdr);
+  }
 
   return 0;
 }
@@ -168,8 +255,6 @@ void analyse(
   struct Eth_header eth_hdr;
   if (interpret_eth(&eth_hdr, header, packet, verbose)) return;
 
-  // Check for 
-
   // Interpret IPv4 header (if possible), or stop
   size_t next_header = ETH_HLEN;
   struct IP_header ip_hdr;
@@ -178,7 +263,7 @@ void analyse(
   }
 
   // Interpret TCP header (if possible), or stop
-  next_header += (ip_hdr.v_hl && 0xF) * IHL_MULTIPLIER;
+  next_header += (ip_hdr.v_hl & 0xF) * IHL_MULTIPLIER;
   struct TCP_header tcp_hdr;
   if (interpret_tcp(&ip_hdr, &tcp_hdr, header, packet, verbose, next_header)) {
     return;
