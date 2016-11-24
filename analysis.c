@@ -10,6 +10,8 @@
 #include <signal.h>
 #include <unistd.h>
 #include <string.h>
+#include <pthread.h>
+#include <assert.h>
 
 struct Eth_header {
   u_char  dest_mac[6],
@@ -378,9 +380,15 @@ static size_t xmas_packets_count  = 0,
               arp_responses_count = 0,
               blacklisted_count   = 0;
 
+static pthread_mutex_t xmas_mtx  = PTHREAD_MUTEX_INITIALIZER,
+                       arp_mtx   = PTHREAD_MUTEX_INITIALIZER,
+                       black_mtx = PTHREAD_MUTEX_INITIALIZER;
+
 // Can be registered for SIGINT to print result of scan when program is
 // cancelled by the user
 void analysis_sigint_handler(int code) {
+  // Mutex not really needed here since we don't cancel the program for
+  // thousands and thousands of miliseconds after the packets we care about.
   if (code == SIGINT) {
     printf("\n");
     printf("%zu Xmas scans (host fingerprinting)\n", xmas_packets_count);
@@ -419,12 +427,17 @@ void analyse(
 
     // Check for XMas Tree Scan packets
     if (check_xmas(&tcp_hdr)) {
-      ++xmas_packets_count;
+      assert(!pthread_mutex_lock(&xmas_mtx));
+        ++xmas_packets_count;
+      assert(!pthread_mutex_unlock(&xmas_mtx));
     }
 
+    // Check for blacklisted domain (if possible)
     next_hdr += (tcp_hdr.offset_nsbit >> 4) * 4;
     if (check_bad_domain(&tcp_hdr, hdr, packet, next_hdr)) {
-      ++blacklisted_count;
+      assert(!pthread_mutex_lock(&black_mtx));
+        ++blacklisted_count;
+      assert(!pthread_mutex_unlock(&black_mtx));
     }
   } break;
   case ETH_TYPE_ARP: {
@@ -436,7 +449,9 @@ void analyse(
 
     // Check for ARP requests
     if (check_arp_response(&arp_hdr)) {
-      ++arp_responses_count;
+      assert(!pthread_mutex_lock(&arp_mtx));
+        ++arp_responses_count;
+      assert(!pthread_mutex_unlock(&arp_mtx));
     }
   }}
 }

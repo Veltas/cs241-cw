@@ -105,12 +105,14 @@ void dispatch(
       if (dispatch_job_state[thread_num] == JOB_DEAD) {
         break;
       } else if (dispatch_job_state[thread_num] == JOB_DYING) {
+        printf("Found dead thread\n");
         assert(!pthread_join(dispatch_jobs[thread_num], NULL));
         break;
       }
     }
     assert(thread_num != MAX_DISPATCH_JOBS); // this actually shouldn't happen
     // Create a new thread
+    printf("Creating a thread, count %zu\n", active_jobs);
     dispatch_job_state[thread_num] = JOB_ALIVE;
     pcap_packet_copied = 0;
     params = (struct Job_parameters){header, packet, verbose, thread_num};
