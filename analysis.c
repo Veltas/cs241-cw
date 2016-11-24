@@ -317,7 +317,6 @@ static int check_bad_domain(
   const int http_port = 80;
   if (tcp_hdr->src_port != http_port && tcp_hdr->dest_port != http_port) {
     // not a HTTP connection
-    printf("not HTTP\n");
     return 0;
   }
 
@@ -326,12 +325,10 @@ static int check_bad_domain(
   const char http_get[] = "GET /";
   if (i + sizeof http_get - 1 >= header->len) {
     // too short
-    printf("too short\n");
     return 0;
   }
   if (memcmp(http_get, packet + i, sizeof http_get - 1)) {
     // doesn't start with the "GET /"
-    printf("doesn't start with GET\n");
     return 0;
   }
 
@@ -339,7 +336,6 @@ static int check_bad_domain(
   const u_char *const addr_end = memchr(packet + i, ' ', header->len - i);
   if (addr_end == NULL) {
     // didn't find end of GET address
-    printf("didn't find end of GET address\n");
     return 0;
   }
 
@@ -347,12 +343,10 @@ static int check_bad_domain(
   const char http_get2[] = " HTTP/";
   if (i + sizeof http_get2 - 1 >= header->len) {
     // too short
-    printf("too short 2\n");
     return 0;
   }
   if (memcmp(http_get2, packet + i, sizeof http_get2 - 1)) {
     // didn't find " HTTP/" after address
-    printf("didn't match http string\n");
     return 0;
   }
 
@@ -365,7 +359,6 @@ static int check_bad_domain(
   }
 
   // didn't find blacklisted host
-  printf("didn't find offending host\n");
   return 0;
 }
 
