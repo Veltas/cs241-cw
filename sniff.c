@@ -3,11 +3,14 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <unistd.h>
 #include <ctype.h>
 #include <pcap.h>
 #include <netinet/if_ether.h>
 
 #include "dispatch.h"
+#include "analysis.h"
 
 static void dump_mac_address(const u_char *const addr) {
   size_t i;
@@ -62,7 +65,7 @@ static void dump(const unsigned char *const data, const size_t length) {
   printf("\nDestination MAC: ");
   dump_mac_address(eth_header->ether_dhost);
   printf("\nType: %hu\n\n", eth_header->ether_type);
-  printf(" === PACKET %zu DATA ==\n", pcount);
+  printf(" === PACKET %zu DATA ===\n", pcount);
   // Decode Packet Data (Skipping over the header)
   if (length > ETH_HLEN) {
     dump_hex(data + ETH_HLEN, length - ETH_HLEN);
@@ -95,15 +98,21 @@ void sniff(const char *const interface, int verbose) {
     fprintf(stderr, "Unable to open interface %s\n", errbuf);
     exit(EXIT_FAILURE);
   }
-  printf("SUCCESS! Opened %s for capture\n\n\n", interface);
-  // Capture packets using sniff_callback
+  printf("SUCCESS! Opened %s for capture\n", interface);
+  // Allow the analysis unit to output results when the program is cancelled
+  if (signal(SIGINT, analysis_sigint_handler) == SIG_ERR) {
+    fprintf(stderr, "Unable to register SIGINT handler\n");
+    exit(EXIT_FAILURE);
+  }
+  // Capture packets using pcap_loop with sniff_callback
+  if (verbose) printf("\n\n");
   while (1) {
     switch (pcap_loop(pcap_handle, -1, sniff_callback, (void *)&verbose)) {
     case -1:
-      printf("No packet received. %s\n", pcap_geterr(pcap_handle));
+      fprintf(stderr, "No packet received. %s\n", pcap_geterr(pcap_handle));
       break;
     default:
-      printf("Unexpected error.\n");
+      fprintf(stderr, "Unexpected error.\n");
       return;
     }
   }

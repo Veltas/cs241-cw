@@ -3,6 +3,8 @@
 
 #include <pcap.h>
 
+void analysis_sigint_handler(int);
+
 void analyse(
   const struct pcap_pkthdr *header,
   const unsigned char      *packet,
