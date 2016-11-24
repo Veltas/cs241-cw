@@ -185,6 +185,13 @@ static int interpret_ip(
   return 0;
 }
 
+// Prints relevent info about ARP header
+static void dump_arp(const struct ARP_header *const arp_hdr) {
+  printf("=== DUMPING ARP HEADER ===\n");
+  printf("\toper: %d\n", arp_hdr->oper);
+  printf("\n\n");
+}
+
 static int interpret_arp(
   const struct Eth_header *const  eth_hdr,
   struct ARP_header *const        arp_hdr,
@@ -216,6 +223,11 @@ static int interpret_arp(
   for (i = 0; i < 2; ++i) arp_hdr->spa[i] = ntohs(arp_hdr->spa[i]);
   for (i = 0; i < 3; ++i) arp_hdr->tha[i] = ntohs(arp_hdr->tha[i]);
   for (i = 0; i < 2; ++i) arp_hdr->tpa[i] = ntohs(arp_hdr->tpa[i]);
+
+  // Optionally print info about header
+  if (verbose) {
+    dump_arp(arp_hdr);
+  }
 
   return 0;
 }

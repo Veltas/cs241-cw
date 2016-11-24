@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 """ This tool performs a (very silly) attempt at ARP cache poisoning. Although
     the poisoning attempt is not strictly valid (what with deadbeefcafe not
